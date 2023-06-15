@@ -30,8 +30,8 @@ def ViT(image_size,patch_size,num_classes,hidden_size,num_layers,
 	assert (image_size_tuple[0] % patch_size == 0) and (
 		image_size_tuple[1] % patch_size == 0
 	), "image_size must be a multiple of patch_size"
-	x = tf.keras.layers.Input(shape=(image_size_tuple[0], image_size_tuple[1], 3))
-	print(x.shape)
+	inputs = tf.keras.layers.Input(shape=(32, 32, 3))
+	x = tf.keras.layers.Lambda(lambda image: tf.image.resize(image,(image_size,image_size)))(inputs)
 	y = tf.keras.layers.Conv2D(
 		filters=hidden_size,
 		kernel_size=patch_size,
@@ -51,7 +51,7 @@ def ViT(image_size,patch_size,num_classes,hidden_size,num_layers,
 	y = tf.keras.layers.LayerNormalization(
 		epsilon=1e-6, name="Transformer/encoder_norm")(y)
 	if pool:
-		y = tf.keras.layers.Lambda(lambda v: tf.reduce_mean(x,axis=1))(y)
+		y = tf.keras.layers.Lambda(lambda v: tf.reduce_mean(x,axis=1))(y) # TODO
 	else:
 		y = tf.keras.layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(y) 
 	y = tf.keras.layers.Dense(num_classes, name="head")(y)

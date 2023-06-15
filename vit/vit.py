@@ -99,6 +99,7 @@ def build_model(
         image_size_tuple[1] % patch_size == 0
     ), "image_size must be a multiple of patch_size"
     x = tf.keras.layers.Input(shape=(image_size_tuple[0], image_size_tuple[1], 3))
+    print(x.shape)
     y = tf.keras.layers.Conv2D(
         filters=hidden_size,
         kernel_size=patch_size,
@@ -107,8 +108,11 @@ def build_model(
         name="embedding",
     )(x)
     y = tf.keras.layers.Reshape((y.shape[1] * y.shape[2], hidden_size))(y)
+    print(y.shape)
     y = layers.ClassToken(name="class_token")(y)
+    print(y.shape)
     y = layers.AddPositionEmbs(name="Transformer/posembed_input")(y)
+    print(y.shape)
     for n in range(num_layers):
         y, _ = layers.TransformerBlock(
             num_heads=num_heads,
@@ -119,7 +123,9 @@ def build_model(
     y = tf.keras.layers.LayerNormalization(
         epsilon=1e-6, name="Transformer/encoder_norm"
     )(y)
+    print(y.shape)
     y = tf.keras.layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(y)
+    print(y.shape)
     if representation_size is not None:
         y = tf.keras.layers.Dense(
             representation_size, name="pre_logits", activation="tanh"
